@@ -111,13 +111,18 @@ namespace Microsoft.Live
                 {
                     if (progressHandler != null)
                     {
-                        progressHandler.Report(new LiveOperationProgress((long)t.Progress.BytesSent, (long)t.Progress.TotalBytesToSend));
+                        progressHandler.Report(
+                            new LiveOperationProgress(
+                                (long)t.Progress.BytesSent, 
+                                (long)t.Progress.TotalBytesToSend));
                     }
                 };
 
                 IAsyncOperationWithProgress<UploadOperation, UploadOperation> asyncOperation = start ? this.uploadOperation.StartAsync() : this.uploadOperation.AttachAsync();
 
-                if (!start) refreshProgress(this.uploadOperation); //raises progressHandler when attaching an upload operation (useful if the upload operation was already completed)
+                //raises progressHandler when attaching an upload operation 
+                //(useful if the upload operation was already completed)
+                if (!start) refreshProgress(this.uploadOperation); 
 
                 await asyncOperation.AsTask(cancellationToken, new Progress<UploadOperation>(refreshProgress));
             }
