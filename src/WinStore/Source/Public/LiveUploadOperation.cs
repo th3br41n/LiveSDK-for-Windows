@@ -107,20 +107,19 @@ namespace Microsoft.Live
             Exception error = null;
             try
             {
-                var progressHandlerWrapper = new Progress<UploadOperation>(t =>
+                Action<UploadOperation> refreshProgress = (t) =>
                 {
                     if (progressHandler != null)
                     {
-                        progressHandler.Report(
-                            new LiveOperationProgress(
-                                (long)t.Progress.BytesSent, //uploading, not downloading
-                                (long)t.Progress.TotalBytesToSend //uploading, not downloading
-                                ));
+                        progressHandler.Report(new LiveOperationProgress((long)t.Progress.BytesSent, (long)t.Progress.TotalBytesToSend));
                     }
-                });
+                };
 
                 IAsyncOperationWithProgress<UploadOperation, UploadOperation> asyncOperation = start ? this.uploadOperation.StartAsync() : this.uploadOperation.AttachAsync();
-                await asyncOperation.AsTask(cancellationToken, progressHandlerWrapper);
+
+                if (!start) refreshProgress(this.uploadOperation); //raises progressHandler when attaching an upload operation (useful if the upload operation was already completed)
+
+                await asyncOperation.AsTask(cancellationToken, new Progress<UploadOperation>(refreshProgress));
             }
             catch (TaskCanceledException)
             {
